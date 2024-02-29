@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link
+  rel="stylesheet"
+  href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+  integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+  crossorigin="anonymous"
+  />
+  <title>Document</title>
+</head>
+<body onload="getProducts()">
+    <header>
+      <h1 id="userName"></h1>
+    </header>
+    <nav>
+        <a href="./Employees.html" style="background-color: #5a5a5a;">Employees</a>
+        <a href="./Departments.html">Departments</a>
+        <a href="./Shifts.html">Shifts</a>
+        <a href="./Users.html">Users</a>
+        <a href="./login.html" style="background: rgb(250, 87, 87); float: right;">Log Out</a>
+    </nav>
+    <main>
+      <br><br>
+      <h3>Employees</h3>
+      <div class="form-group" style="width: 400px;margin: auto;">
+        <label for="name">Department Name</label>
+        <select class="form-control" id="DepartmentsNames" required>
+
+        </select>
+      </div>
+        <section>
+          <div class="container" style="margin-top: 50px">
+            <table class="table table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th scope="col">FullName</th>
+                  <th scope="col">Department</th>
+                  <th scope="col">shifts</th>
+                </tr>
+              </thead>
+              <tbody id="tBody"></tbody>
+            </table>
+            <br /><br /><br />
+            <button type="button" class="btn btn-dark" onclick="createEmployee()">
+              Create New Employee
+            </button>      
+          </div>
+        </section>
+    </main>
+
+  <footer>
+      <a href="#">&copy; 2023 | Elad Shaked</a>
+  </footer>
+  
+  <script>
+        const url = 'http://localhost:8001/Employees';
+
+        const getProducts = async () => {
+          const accessToken = sessionStorage['accessToken'];
+
+          const resp = await fetch(url, {
+            method: 'get',
+            headers: { 'x-access-token': accessToken },
+          });
+        const data = await resp.json();
+        const userName = data[0].name
+
+        const resp1 = await fetch(`http://localhost:8001/Department`, { method: 'get' });
+        const departments = await resp1.json();
+        
+        const departmentsSelect = document.getElementById("DepartmentsNames");
+        const option = document.createElement("option");
+        option.text = "All";
+        departmentsSelect.add(option);
+
+        departments.forEach(department => {
+          const option = document.createElement("option");
+          option.text = department.name;
+          departmentsSelect.add(option);
+        })
+
+        departmentsSelect.addEventListener("click", () => {
+          const selectedDepartment = departmentsSelect.value;
+          filterEmployees(selectedDepartment);
+        });
+
+        
+        document.getElementById('userName').innerHTML = userName
+
+        const employees = data[1]
+        filterEmployees("All")
+          
+          async function filterEmployees(selectedDepartment) {
+            let filterEmployee = []
+            const tBody = document.getElementById('tBody');
+            while (tBody.firstChild) {
+              tBody.removeChild(tBody.firstChild);}
+          
+              if (selectedDepartment != "All") {
+                filterEmployee = employees.filter(employee => employee.department == selectedDepartment);
+              }
+              else{
+                filterEmployee = employees
+              }
+
+          const resp1 = await fetch('http://localhost:8001/shifts', {method: 'get'});
+          const allShifts = await resp1.json();
+
+          filterEmployee.forEach((employee) => {
+            const department = departments.filter(dep => dep.name == employee.department)
+            
+            // table row
+            const tr = document.createElement('tr');
+
+            // 'Name' column
+            const tdName = document.createElement('td');
+            const nameLink = document.createElement('a');
+            //
+
+            nameLink.href = `EditEmployee.html?employeeId=${employee._id}`;
+
+            //
+            nameLink.innerHTML = employee.firstName + ` ${employee.lastName}`;
+            tdName.appendChild(nameLink);
+
+            // 'Department' column
+            const tdDepartment = document.createElement('td');
+            const departmentLink = document.createElement('a');
+            //
+
+            departmentLink.href = `EditDepartment.html?departmentId=${department[0]._id}`;
+
+            //
+            departmentLink.innerHTML = employee.department;
+            tdDepartment.appendChild(departmentLink);
+
+
+            // 'Shifts' column
+            const shiftEmployees = allShifts.filter(shift => shift.shiftEmployees.includes(employee._id))
+            const tdShifts = document.createElement('td');
+
+            shiftEmployees.forEach(shift => {              
+              const shiftLink = document.createElement('a');
+              //
+              shiftLink.href = `EditShift.html?shiftId=${shift._id}`;
+              //
+              shiftLink.innerHTML = `${shift.date.slice(0, 10)}<br>`;
+              tdShifts.appendChild(shiftLink);
+            });
+
+
+
+
+            if (shiftEmployees.length == 0) {
+            tdShifts.innerHTML = `No shift found`;
+            }
+
+
+            tr.appendChild(tdName);
+            tr.appendChild(tdDepartment);
+            tr.appendChild(tdShifts);
+
+            tBody.appendChild(tr);
+          });
+        }}
+
+      function createEmployee() {
+        location.href = 'AddNewEmployee.html'; // sets the URL of the current page
+      }
+  </script>
+
+</body>
+<style>
+  
+  * {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+header h1 {
+    text-align: center;
+    font-size: 40px;
+    color: white;
+}
+
+header {
+    padding: 40px;
+    background-color: rgb(17, 124, 143);
+}
+
+nav {
+    background-color: #333;
+    overflow: hidden;
+}
+
+nav a {
+    text-decoration: none;
+    padding: 20px;
+    text-align: center;
+    float: left;
+    color: white;
+    transition: all 0.3s;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+main {
+    background-color: white;
+    text-align: center;
+}
+
+
+section {
+  min-height: 60vh;
+  margin-bottom: 30px;
+}
+
+footer {
+    background-color: #333;
+    overflow: hidden;
+}
+
+footer a {
+    text-decoration: none;
+    padding: 20px;
+    text-align: center;
+    float: left;
+    color: white;
+}
+</style>
+</html>

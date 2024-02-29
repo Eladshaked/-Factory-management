@@ -1,0 +1,17 @@
+a:link, a:visited {
+    background-color: white;
+    color: black;
+    border: 2px solid rgb(162, 170, 189);
+    border-radius: 5px;
+    padding: 6px 12px 4px 12px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+  }
+  
+a{
+
+background-color: rgb(53, 83, 192);
+text-decoration: none;
+color: white;
+}

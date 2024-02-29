@@ -1,0 +1,204 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="styleEmployee.css">
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+      integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body onload="loadData()">
+    <div class="float-container">
+      <div class="float-child">
+        <div class="container" style="margin-top: 50px">
+          <h1>Edit Department: <strong id="departmentName"></strong></h1>
+          <br />
+          <form>
+            <div class="form-group">
+              <label for="manager">Manager (from employees)</label>
+              <select  class="form-control" id="DepartmentID" required>
+
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="name">Department Name</label>
+              <select class="form-control" id="DepartmentsNames" required>
+
+              </select>
+            </div>
+
+              <small style="color: red;">*Please make sure all the details are correct before changing </small>
+            <br><br>
+          
+          </form>
+          <button type="input" class="btn btn-primary" onclick="updateDepartment()">
+          Update
+        </button>
+        <button type="input" class="btn btn-dark" color="red lighten-4" onclick="deleteDepartment()">
+          Delete
+        </button>
+        <button type="input" class="btn btn-primary" color="red lighten-4" onclick="departmentPage()">
+          Department page
+        </button>
+        </div>
+      </div>
+      <div class="float-child">
+        <div class="container" style="margin-top: 50px">
+          <h3>Add employee to the department:</h3>
+          <br />
+          <form>
+            <div class="form-group">
+              <label for="manager">Employee Name:</label>
+              <select  class="form-control" id="Employees" required>
+
+              </select>
+            </div>
+          
+          </form>
+          <button type="input" class="btn btn-dark" color="red lighten-4" onclick="addEmployee()">
+            Add Employee
+          </button>
+        </div>
+
+      </div>
+      
+    </div>
+
+    <script>
+      const url = 'http://localhost:8001/Department';
+
+      const params = new URLSearchParams(location.search);
+      const departmentId = params.get('departmentId');
+
+      async function loadData() {
+        const url = 'http://localhost:8001/employees';
+        const accessToken = sessionStorage['accessToken'];
+
+        const resp = await fetch(url, {
+          method: 'get',
+          headers: { 'x-access-token': accessToken },
+        });
+        const data = await resp.json();
+        const employees = data[1]
+        
+        
+        employees.forEach(employee => {
+          // create option using DOM
+          const optionElement1 = document.getElementById("DepartmentID");
+          const option = document.createElement("option");
+          option.text = `${employee.firstName} ${employee.lastName}`;
+          option.value = employee._id
+          optionElement1.add(option);
+          
+          const optionElement2 = document.getElementById("Employees");
+          const option2 = document.createElement("option");
+          option2.text = `${employee.firstName} ${employee.lastName}`;
+          option2.value = employee._id
+          optionElement2.add(option2);
+        });
+
+        
+        
+        const resp2 = await fetch(`http://localhost:8001/Department/${departmentId}`);
+        const department = await (resp2.json());
+        const x = document.getElementById("DepartmentsNames");
+        const option = document.createElement("option");
+        option.text = department[0].name;
+        x.add(option);
+
+        document.getElementById('departmentName').innerHTML = `${department[0].name}`
+        document.querySelector('#DepartmentID').value = `${department[0].manager}`;
+        document.querySelector('#DepartmentsNames').value = `${department[0].name}`;
+      }
+
+      
+
+      async function updateDepartment() {
+        let managerElemnt = document.getElementById("DepartmentID");
+        let managerIndex = managerElemnt.selectedIndex;
+
+        let departmentElement = document.getElementById("DepartmentsNames");
+        let departmentIndex = departmentElement.selectedIndex;
+
+        const obj = [{
+          manager: managerElemnt.options[managerIndex].text,
+          name: departmentElement.options[departmentIndex].text
+        },
+        {
+          employeeID : managerElemnt.options[managerIndex].value
+        }];
+
+        const resp = await fetch(`${url}/${departmentId}`, {
+          method: 'put',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(obj),
+        });
+
+        window.location.href = './Departments.html'
+      }
+
+      async function deleteDepartment() {
+        const response = await fetch(`${url}/${departmentId}`, {
+          method: 'delete',
+        });
+
+        window.location.href = './Departments.html'
+      }
+
+      async function addEmployee() {
+        const url = 'http://localhost:8001/employees';
+        const accessToken = sessionStorage['accessToken'];
+
+        const resp2 = await fetch(url, {
+          method: 'get',
+          headers: { 'x-access-token': accessToken },
+        });
+        const data = await resp2.json();
+        const employees = data[1]
+
+
+
+        let emplyeeElement = document.getElementById("Employees");
+        let emplyeeIndex = emplyeeElement.selectedIndex;
+        const employeeId = emplyeeElement.options[emplyeeIndex].value;
+        const employee = employees.find(employee => employee._id = employeeId)
+        console.log(employee);
+        const obj = {
+          firstName: employee.firstName,
+          lastName: employee.lastName,
+          DepartmentID: departmentId
+        };
+
+        const resp = await fetch(`http://localhost:8001/employees/${employeeId}`, {
+          method: 'put',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(obj),
+        });
+
+        window.location.href = './Departments.html'
+      }
+
+      function departmentPage() {
+        window.location.href = './Departments.html'
+      }
+    </script>
+  </body>
+</html>
+
+<style>
+  .float-container {
+    border: 3px solid #fff;
+    padding: 20px;
+}
+
+.float-child {
+    width: 50%;
+    float: left;
+    padding: 20px;
+    border-left: 0.5px solid gray;
+}  
+.form-group{
+    width: 500px;
+  }
+</style>

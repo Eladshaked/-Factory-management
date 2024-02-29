@@ -1,0 +1,129 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="styleEmployee.css">
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+      integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body onload="loadData()">
+
+      <div class="container" style="margin-top: 50px">
+        <h1>Edit Employee: <strong id="employeeName"></strong></h1>
+        <br />
+        <form>
+          <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="firstName"
+              aria-describedby="emailHelp"
+              required
+              placeholder="first Name [at least 3 char]"
+            />
+          </div>
+          <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="lastName"
+              placeholder="Last Name [at least 3 char]"
+              required
+              />
+          </div>
+
+          <div class="form-group">
+            <label>Department</label>
+            <select  class="form-control" id="DepartmentID" required>
+
+            </select>
+          </div>
+            <small style="color: red;">*Please make sure all the details are correct before changing </small>
+          <br><br>
+        
+        </form>
+        <button type="input" class="btn btn-primary" onclick="updateEmployee()">
+        Update
+      </button>
+      <button type="input" class="btn btn-dark" color="red lighten-4" onclick="deleteEmployee()">
+        Delete
+      </button>
+      <button type="input" class="btn btn-primary" color="red lighten-4" onclick="homePage()">
+        Employees page
+      </button>
+      </div>
+
+
+    <script>
+      const url = 'http://localhost:8001/Employees';
+
+      const params = new URLSearchParams(location.search);
+      const employeeId = params.get('employeeId');
+
+
+      async function loadData() {
+
+        const resp1 = await fetch(`http://localhost:8001/Department`, { method: 'get' });
+        const departments = await resp1.json();
+        departments.forEach(name => {
+          // create option using DOM
+          const x = document.getElementById("DepartmentID");
+          const option = document.createElement("option");
+          option.value = name._id
+          option.text = name.name;
+          x.add(option);
+        });
+
+        const resp2 = await fetch(`${url}/${employeeId}`);
+        let employee = await (resp2.json());
+
+        document.getElementById('employeeName').innerHTML = `${employee[0][0].firstName} ${employee[0][0].lastName}`
+        document.getElementById('firstName').value = `${employee[0][0].firstName}`
+        document.getElementById('lastName').value = `${employee[0][0].lastName}`
+        document.querySelector('#DepartmentID').value = employee[0][0].DepartmentID;
+
+      }
+
+      async function updateEmployee() {
+        let x = document.getElementById("DepartmentID");
+        let i = x.selectedIndex;
+        const obj = {
+          firstName: document.getElementById('firstName').value,
+          lastName: document.getElementById('lastName').value,
+          DepartmentID: x.options[i].value
+        };
+
+        const resp = await fetch(`${url}/${employeeId}`, {
+          method: 'put',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(obj),
+        });
+
+        window.location.href = './Employees.html';
+      }
+
+      async function deleteEmployee() {
+        const response = await fetch(`${url}/${employeeId}`, {
+          method: 'delete',
+        });
+
+        const data = await response.json();
+        homePage()
+      }
+
+      function homePage() {
+        window.location.href = './Employees.html';
+      }
+    </script>
+  </body>
+</html>
+
+<style>
+  .form-group{
+    width: 500px;
+  }
+</style>

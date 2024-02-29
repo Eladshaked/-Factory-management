@@ -1,0 +1,233 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="styleEmployee.css">
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+      integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body onload="loadData()">
+    <div class="float-container">
+      <div class="float-child">
+        <div class="container" style="margin-top: 50px">
+          <h1>Edit Shift: <strong id="shiftName"></strong></h1>
+          <br />
+          <form>
+            <div class="form-group">
+              <label for="shiftDate">Shift Date</label>
+              <input
+                type="date"
+                class="form-control"
+                id="shiftDate"
+                placeholder="Shift Date"
+                required
+                />
+            </div>
+            <div class="form-group">
+              <label for="startTime">Start Time</label>
+              <input
+                value="12"
+                min="0"
+                max="24"
+                type="number"
+                class="form-control"
+                id="startTime"
+                placeholder="Start Time"
+                required
+                />
+            </div>
+            <div class="form-group">
+              <label for="endTime">End Time</label>
+              <input
+                value="12"
+                min="0"
+                max="24"
+                type="number"
+                class="form-control"
+                id="endTime"
+                placeholder="End Time"
+                required
+                />
+            </div>
+
+              <small style="color: red;">*Please make sure all the details are correct before changing </small>
+            <br><br>
+          
+          </form>
+          <button type="input" class="btn btn-primary" onclick="updateShift()">
+          Update
+        </button>
+        <button type="input" class="btn btn-dark" onclick="deleteShift()">
+          Delete
+        </button>
+        <button type="input" class="btn btn-primary" onclick="shiftPage()">
+          Shift page
+        </button>
+        </div>
+      </div>
+      <div class="float-child">
+        <div class="container" style="margin-top: 50px">
+          <h3>Add employee to the shift:</h3>
+          <br />
+          <form>
+            <div class="form-group">
+              <label for="manager">Employee Name:</label>
+              <select  class="form-control" id="Employees" required>
+
+              </select>
+            </div>
+          </form>
+          <button type="input" class="btn btn-primary" onclick="addEmployee()">
+            Add Employee
+          </button>
+          <br><br>
+          <form>
+          <h3>Delete employee from the shift:</h3>
+
+            <div class="form-group">
+              <label for="manager">Employee Name:</label>
+              <select  class="form-control" id="shiftEmployees" required>
+
+              </select>
+            </div>
+          
+          </form>
+          <button type="input" class="btn btn-dark" onclick="deleteEmployee()">
+            Delete Employee
+          </button>
+        </div>
+
+      </div>
+      
+    </div>
+
+    <script>
+      const url = 'http://localhost:8001/Shifts';
+
+      const params = new URLSearchParams(location.search);
+      const shiftId = params.get('shiftId');
+
+      async function loadData() {
+        const url = 'http://localhost:8001/employees';
+        const accessToken = sessionStorage['accessToken'];
+
+        const resp = await fetch(url, {
+          method: 'get',
+          headers: { 'x-access-token': accessToken },
+        });
+        const data = await resp.json();
+        const employees = data[1]
+        
+        
+        
+        const resp2 = await fetch(`http://localhost:8001/Shifts/${shiftId}`);
+        const shift = await (resp2.json());
+        
+        employees.forEach(employee => {
+          const option = document.createElement("option");
+          option.text = `${employee.firstName} ${employee.lastName}`;
+          option.value = employee._id
+          
+          if (shift[0].shiftEmployees.includes(employee._id)) {
+            const optionElement = document.getElementById("shiftEmployees");
+            optionElement.add(option);
+          }
+          else{
+            const optionElement = document.getElementById("Employees");
+            optionElement.add(option);
+          }
+        });
+
+        document.getElementById('shiftName').innerHTML = `${shift[0].date.slice(0,10)}`
+        document.querySelector('#shiftDate').value = `${shift[0].date.slice(0, 10)}`;
+        document.querySelector('#startTime').value = `${shift[0].startHour}`;
+        document.querySelector('#endTime').value = `${shift[0].endHour}`;
+      }
+
+      
+
+      async function updateShift() {
+        const obj = {
+          date: document.getElementById('shiftDate').value,
+          startHour: document.getElementById('startTime').value,
+          endHour: document.getElementById('endTime').value
+        };
+
+        const resp = await fetch(`${url}/${shiftId}`, {
+          method: 'put',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(obj),
+        });
+
+        window.location.href = './Shifts.html'
+      }
+
+      async function deleteShift() {
+        const response = await fetch(`${url}/${shiftId}`, {
+          method: 'delete',
+        });
+
+        window.location.href = './Shifts.html'
+      }
+
+      async function addEmployee() {
+        let emplyeeElement = document.getElementById("Employees");
+        let emplyeeIndex = emplyeeElement.selectedIndex;
+        const employeeId = emplyeeElement.options[emplyeeIndex].value;
+        
+        const obj = {
+          employeeId : employeeId
+        };
+
+        const resp = await fetch(`${url}/addEmployee/${shiftId}`, {
+          method: 'put',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(obj),
+        });
+
+        window.location.href = './Shifts.html'
+      }
+
+      async function deleteEmployee() {
+        let emplyeeElement = document.getElementById("shiftEmployees");
+        let emplyeeIndex = emplyeeElement.selectedIndex;
+        const employeeId = emplyeeElement.options[emplyeeIndex].value;
+        
+        const obj = {
+          employeeId : employeeId
+        };
+
+        const resp = await fetch(`${url}/deleteEmployee/${shiftId}`, {
+          method: 'put',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(obj),
+        });
+
+        window.location.href = './Shifts.html'
+      }
+
+      function shiftPage() {
+        window.location.href = './Shifts.html'
+      }
+    </script>
+  </body>
+</html>
+
+<style>
+  .float-container {
+    border: 3px solid #fff;
+    padding: 20px;
+}
+
+.float-child {
+    width: 50%;
+    float: left;
+    padding: 20px;
+    border-left: 0.5px solid gray;
+}  
+.form-group{
+    max-width: 500px;
+  }
+</style>

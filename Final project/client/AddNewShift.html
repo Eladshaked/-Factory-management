@@ -1,0 +1,122 @@
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+      integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body onload="loadData()">
+    <div class="container" style="margin-top: 50px">
+      <h1>Create New shift</h1>
+      <br />
+      <form>
+        <div class="form-group">
+          <label for="shiftDate">Shift Date</label>
+          <input
+            type="date"
+            class="form-control"
+            id="shiftDate"
+            placeholder="Shift Date"
+            required
+            />
+        </div>
+        <div class="form-group">
+          <label for="startTime">Start Time</label>
+          <input
+            value="12"
+            min="0"
+            max="24"
+            type="number"
+            class="form-control"
+            id="startTime"
+            placeholder="Start Time"
+            required
+            />
+        </div>
+        <div class="form-group">
+          <label for="endTime">End Time</label>
+          <input
+            value="12"
+            min="0"
+            max="24"
+            type="number"
+            class="form-control"
+            id="endTime"
+            placeholder="End Time"
+            required
+            />
+        </div>
+
+        <div class="form-group">
+          <label for="employee">Employee Name:</label>
+          <select  class="form-control" id="Employees" required>
+
+          </select>
+        </div>
+
+        <br />
+      </form>
+      <button type="input" class="btn btn-primary" onclick="add()">
+        Add
+      </button>
+      <button type="input" class="btn btn-primary" onclick="shifts()">
+        shifts page
+      </button>
+    </div>
+
+    <script>
+      document.getElementById('shiftDate').valueAsDate = new Date();
+
+
+      async function loadData() {
+        const url = 'http://localhost:8001/Employees';
+        const accessToken = sessionStorage['accessToken'];
+
+        const resp = await fetch(url, {
+          method: 'get',
+          headers: { 'x-access-token': accessToken },
+        });
+        const data = await resp.json();
+        const Employees = data[1]
+
+        Employees.forEach(employee => {
+          // create option using DOM
+          const x = document.getElementById("Employees");
+          const option = document.createElement("option");
+          option.text = `${employee.firstName} ${employee.lastName}`;
+          option.value = employee._id;
+          x.add(option);
+        });          
+      }
+      
+      async function add() {
+        let x = document.getElementById("Employees");
+        let i = x.selectedIndex;
+        const obj = {
+          date: document.getElementById('shiftDate').value,
+          startHour: document.getElementById('startTime').value,
+          endHour: document.getElementById('endTime').value,
+          shiftEmployees: [x.options[i].value]
+        };
+        const url = 'http://localhost:8001/Shifts';
+
+        const resp = await fetch(url, {
+          method: 'post',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(obj),
+        });
+        window.location.href = './Shifts.html'
+      }
+      function shifts() {
+        window.location.href = './Shifts.html'
+      }
+    </script>
+  </body>
+</html>
+<style>
+  .form-group{
+    width: 500px;
+  }
+</style>
